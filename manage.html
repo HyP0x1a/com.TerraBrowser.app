@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>歌曲管理</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            min-height: 100vh;
+            background: url('./bg.gif') center/cover no-repeat fixed;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            width: 100%;
+            background: rgba(10, 15, 25, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 24px 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            color: #fff;
+        }
+        h1 { font-size:1.2rem; text-align:center; margin-bottom:16px; letter-spacing:2px; text-shadow:0 1px 4px rgba(0,0,0,0.5); }
+        .file-area {
+            margin:12px 0;
+            padding:16px 12px;
+            border:2px dashed rgba(255,255,255,0.15);
+            border-radius:16px;
+            text-align:center;
+            font-size:0.8rem;
+            color:rgba(255,255,255,0.5);
+            cursor:pointer;
+            transition:0.3s;
+            background:rgba(255,255,255,0.03);
+        }
+        .file-area:hover { border-color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.06); }
+        .file-area input[type="file"] { display:none; }
+        .file-area .hint { font-size:0.6rem; margin-top:4px; opacity:0.6; }
+        .group-select { display:flex; gap:10px; margin:12px 0; align-items:center; font-size:0.8rem; }
+        .group-select select { flex:1; padding:8px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); border-radius:12px; color:#fff; font-size:0.8rem; outline:none; }
+        .group-select select option { background:#222; }
+        .btn { width:100%; padding:10px; background:rgba(255,255,255,0.12); border:none; border-radius:14px; color:#fff; font-size:0.9rem; cursor:pointer; transition:0.3s; margin:6px 0; backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.05); }
+        .btn:hover { background:rgba(255,255,255,0.2); }
+        .btn.primary { background:rgba(74,158,255,0.3); border-color:rgba(74,158,255,0.2); }
+        .btn.primary:hover { background:rgba(74,158,255,0.45); }
+        .btn.danger { background:rgba(255,70,70,0.2); border-color:rgba(255,70,70,0.15); }
+        .btn.danger:hover { background:rgba(255,70,70,0.35); }
+        .info { margin-top:12px; font-size:0.65rem; color:rgba(255,255,255,0.4); text-align:center; border-top:1px solid rgba(255,255,255,0.05); padding-top:12px; }
+        .info .count { color:#ffd966; }
+        .back-link { display:block; text-align:center; margin-top:12px; color:rgba(255,255,255,0.4); text-decoration:none; font-size:0.7rem; transition:0.3s; }
+        .back-link:hover { color:#fff; }
+        #fileList { margin:8px 0; font-size:0.6rem; color:rgba(255,255,255,0.5); max-height:120px; overflow-y:auto; padding:4px 8px; background:rgba(0,0,0,0.2); border-radius:8px; }
+        #fileList span { display:block; padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 歌曲管理</h1>
+
+        <div class="file-area" id="fileArea">
+            <div>📂 点击选择音频文件（可多选）</div>
+            <div class="hint">支持 .mp3 .wav .ogg 等</div>
+            <input type="file" id="fileInput" multiple accept="audio/*">
+        </div>
+
+        <div id="fileList"></div>
+
+        <div class="group-select">
+            <label style="opacity:0.7;">导入到分组：</label>
+            <select id="targetGroup">
+                <option value="游戏原声">🎮 游戏原声</option>
+                <option value="其他">🎧 其他</option>
+            </select>
+        </div>
+
+        <button class="btn primary" id="importBtn">📥 一键导入所选歌曲</button>
+        <button class="btn danger" id="clearBtn">🗑️ 清空所有自定义歌曲</button>
+
+        <div class="info">
+            当前自定义歌曲数：<span class="count" id="countDisplay">0</span>
+        </div>
+
+        <a class="back-link" href="index.html">← 返回主页</a>
+    </div>
+
+    <script>
+        // ============================================================
+        // 管理页面逻辑
+        // ============================================================
+        var fileArea = document.getElementById('fileArea');
+        var fileInput = document.getElementById('fileInput');
+        var fileList = document.getElementById('fileList');
+        var targetGroup = document.getElementById('targetGroup');
+        var importBtn = document.getElementById('importBtn');
+        var clearBtn = document.getElementById('clearBtn');
+        var countDisplay = document.getElementById('countDisplay');
+
+        // 点击 file-area 触发文件选择框
+        fileArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // 显示选中的文件
+        fileInput.addEventListener('change', function(e) {
+            var files = e.target.files;
+            fileList.innerHTML = '';
+            if (files.length === 0) {
+                fileList.innerHTML = '<span style="color:rgba(255,255,255,0.3);">未选择文件</span>';
+                return;
+            }
+            Array.from(files).forEach(function(f) {
+                var span = document.createElement('span');
+                span.textContent = '🎵 ' + f.name;
+                fileList.appendChild(span);
+            });
+        });
+
+        // 导入歌曲
+        importBtn.addEventListener('click', function() {
+            var files = fileInput.files;
+            if (files.length === 0) {
+                alert('请先选择音频文件');
+                return;
+            }
+            var group = targetGroup.value;
+            var existing = [];
+            try {
+                var stored = localStorage.getItem('ark_songs');
+                if (stored) existing = JSON.parse(stored);
+                if (!Array.isArray(existing)) existing = [];
+            } catch (e) { existing = []; }
+
+            var added = 0;
+            var skipped = 0;
+            Array.from(files).forEach(function(f) {
+                var fullName = f.name;
+                var dotIdx = fullName.lastIndexOf('.');
+                var name = (dotIdx > 0) ? fullName.substring(0, dotIdx) : fullName;
+                var prefix = (group === '游戏原声') ? 'music1' : 'music2';
+                var filePath = prefix + '/' + fullName;
+                var exists = existing.some(function(s) { return s.file === filePath; });
+                if (!exists) {
+                    existing.push({ name: name, file: filePath, group: group });
+                    added++;
+                } else {
+                    skipped++;
+                }
+            });
+
+            if (added === 0) {
+                alert('所有文件已存在于列表中（已跳过 ' + skipped + ' 个）');
+                return;
+            }
+
+            localStorage.setItem('ark_songs', JSON.stringify(existing));
+            updateCount();
+            fileInput.value = '';
+            fileList.innerHTML = '<span style="color:rgba(255,255,255,0.3);">已导入 ' + added + ' 首歌曲，' + (skipped ? '跳过 ' + skipped + ' 个重复' : '') + '</span>';
+            alert('成功导入 ' + added + ' 首歌曲！');
+        });
+
+        // 清空
+        clearBtn.addEventListener('click', function() {
+            if (confirm('确定要清空所有自定义导入的歌曲吗？（内置歌曲不受影响）')) {
+                localStorage.removeItem('ark_songs');
+                updateCount();
+                fileList.innerHTML = '<span style="color:rgba(255,255,255,0.3);">已清空</span>';
+                alert('已清空所有自定义歌曲');
+            }
+        });
+
+        function updateCount() {
+            var existing = [];
+            try {
+                var stored = localStorage.getItem('ark_songs');
+                if (stored) existing = JSON.parse(stored);
+                if (!Array.isArray(existing)) existing = [];
+            } catch (e) { existing = []; }
+            countDisplay.textContent = existing.length;
+        }
+
+        // 初始化
+        updateCount();
+        fileList.innerHTML = '<span style="color:rgba(255,255,255,0.3);">请选择音频文件</span>';
+    </script>
+</body>
+</html>

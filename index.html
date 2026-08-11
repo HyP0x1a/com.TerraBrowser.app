@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>主页</title>
+    <style>
+        /* 全体起立！给刀客塔整个好活 */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            height: 100vh;
+            background: url('./bg.gif') center/cover no-repeat fixed;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        #top-left {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 30;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            padding: 8px 12px 6px 8px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            max-width: 90vw;
+        }
+        .top-row { display:flex; align-items:center; gap:10px; }
+        .top-row .logo { width:40px; height:40px; border-radius:10px; object-fit:cover; background:rgba(255,255,255,0.1); flex-shrink:0; }
+        .top-row .time { font-size:0.9rem; font-weight:600; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.5); letter-spacing:1px; }
+        .bottom-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+            font-size: 0.5rem;
+            color: rgba(255,255,255,0.85);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            flex-wrap: wrap;
+        }
+        .bottom-row .period { background:rgba(255,255,255,0.15); padding:0 8px; border-radius:12px; color:#ffd966; }
+        .bottom-row .weather {
+            background: rgba(255,255,255,0.10);
+            padding: 0 8px;
+            border-radius: 12px;
+            color: #8cf;
+            font-weight: 400;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .bottom-row .weather .wicon {
+            font-size: 0.6rem;
+            line-height: 1;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+        .search-box {
+            width: 100%;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .search-box input { flex:1; padding:6px 4px; border:none; background:transparent; font-size:0.55rem; color:#fff; outline:none; text-shadow:0 1px 2px rgba(0,0,0,0.3); }
+        .search-box input::placeholder { color:rgba(255,255,255,0.7); font-weight:300; font-size:0.5rem; }
+        .search-box button { width:22px; height:22px; border:none; border-radius:50%; background:rgba(255,255,255,0.2); color:#fff; font-size:0.6rem; cursor:pointer; transition:0.3s; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); line-height:1; }
+        .search-box button:hover { background:rgba(255,255,255,0.4); }
+
+        .bookmark-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 9px;
+            width: 100%;
+        }
+        .bookmark-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 7px 9px 6px;
+            min-width: 40px;
+            background: rgba(255,255,255,0.10);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+            text-decoration: none;
+            transition: 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            font-size: 0.4rem;
+        }
+        .bookmark-card:hover { background:rgba(255,255,255,0.25); transform:translateY(-2px); border-color:rgba(255,255,255,0.3); }
+        .bookmark-card:active { transform:scale(0.95); }
+        .bookmark-card .icon { font-size:1.2rem; line-height:1; margin-bottom:1px; }
+        .bookmark-card .title { font-size:0.4rem; text-shadow:0 1px 2px rgba(0,0,0,0.3); opacity:0.9; text-align:center; }
+        .bookmark-card.settings { border-color:rgba(255,255,200,0.2); background:rgba(255,255,200,0.05); }
+        .bookmark-card.settings:hover { background:rgba(255,255,200,0.15); border-color:rgba(255,255,200,0.4); }
+
+        #musicToggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 40;
+            width: 32px;
+            height: 32px;
+            background: rgba(0,0,0,0.35);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.0rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        #musicToggle:hover { background:rgba(0,0,0,0.5); transform:scale(1.05); }
+        #musicPanel {
+            position: fixed;
+            top: 50px;
+            right: 10px;
+            z-index: 39;
+            width: 240px;
+            max-height: 70vh;
+            background: rgba(10,15,25,0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            padding: 12px 14px 10px;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        #musicPanel.show { display: flex; }
+        #musicPanel .player .song-title { font-size:0.55rem; color:#fff; text-align:center; text-shadow:0 1px 3px rgba(0,0,0,0.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        #musicPanel .player .controls { display:flex; gap:6px; justify-content:center; }
+        #musicPanel .player .controls button { background:rgba(255,255,255,0.15); border:none; border-radius:50%; width:24px; height:24px; color:#fff; font-size:0.6rem; cursor:pointer; }
+        #musicPanel .player .controls button:hover { background:rgba(255,255,255,0.3); }
+        #musicPanel .player .progress { display:flex; align-items:center; gap:6px; font-size:0.4rem; color:rgba(255,255,255,0.6); }
+        #musicPanel .player .progress input[type="range"] { flex:1; height:3px; -webkit-appearance:none; background:rgba(255,255,255,0.2); border-radius:2px; outline:none; }
+        #musicPanel .player .progress input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:10px; height:10px; border-radius:50%; background:#fff; cursor:pointer; }
+        .group-tabs { display:flex; gap:6px; margin:6px 0 4px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:4px; }
+        .group-tabs .tab { font-size:0.45rem; color:rgba(255,255,255,0.5); padding:2px 10px; border-radius:12px; cursor:pointer; background:rgba(255,255,255,0.05); }
+        .group-tabs .tab.active { color:#fff; background:rgba(255,255,255,0.15); }
+        .playlist { max-height:120px; overflow-y:auto; margin-top:2px; }
+        .playlist .song-item { display:flex; justify-content:space-between; padding:3px 4px 3px 8px; font-size:0.4rem; color:rgba(255,255,255,0.7); border-radius:6px; cursor:pointer; }
+        .playlist .song-item:hover { background:rgba(255,255,255,0.1); color:#fff; }
+        .playlist .song-item.active { background:rgba(255,255,255,0.15); color:#ffd966; }
+        .playlist .song-item .del-btn { background:none; border:none; color:rgba(255,100,100,0.5); cursor:pointer; font-size:0.5rem; padding:0 4px; }
+        .add-song { margin-top:4px; display:flex; flex-wrap:wrap; gap:4px; }
+        .add-song input, .add-song select { flex:1; min-width:60px; padding:2px 6px; font-size:0.4rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); border-radius:10px; color:#fff; outline:none; }
+        .add-song select option { background:#222; }
+        .add-song button { padding:2px 10px; font-size:0.4rem; background:rgba(255,255,255,0.15); border:none; border-radius:10px; color:#fff; cursor:pointer; }
+
+        .right-bottom-area {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 15;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+        #amiyaBox {
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 8px 10px 6px 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.3s;
+            min-width: 80px;
+            position: relative;
+        }
+        #amiyaBox:hover {
+            background: rgba(0,0,0,0.35);
+            border-color: rgba(255,255,255,0.15);
+        }
+        #amiyaBox .amiya-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #amiyaBox .amiya-wrap .arrow {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.6);
+            text-shadow: 0 0 8px rgba(255,255,200,0.2);
+            animation: pulse-arrow 1.2s ease-in-out infinite;
+        }
+        @keyframes pulse-arrow {
+            0%, 100% { opacity: 0.4; transform: translateX(0); }
+            50% { opacity: 1; transform: translateX(4px); }
+        }
+        #amiyaBox .amiya-wrap img {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        #amiyaBox .click-hint {
+            font-size: 0.45rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
+        .footer-credit {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .footer-credit a {
+            display: inline-block;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 0.4rem;
+            transition: 0.3s;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+            letter-spacing: 0.25px;
+        }
+        .footer-credit a:hover { background:rgba(255,255,255,0.2); color:#fff; border-color:rgba(255,255,255,0.3); }
+
+        #cmdBox {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 20;
+            width: 200px;
+            max-height: 140px;
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 6px 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+            overflow: hidden;
+            pointer-events: none;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.45rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+        }
+        #cmdBox .line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0.8;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        #cmdBox .line:last-child {
+            color: rgba(255,255,255,0.9);
+        }
+
+        #settingsModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        #settingsModal.show { display: flex; }
+        .settings-panel {
+            background: rgba(10,15,25,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+            width: 100%;
+            max-width: 420px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 18px;
+            color: #fff;
+            overflow-y: auto;
+        }
+        .settings-panel h2 { font-size:1.0rem; text-align:center; margin-bottom:12px; letter-spacing:2px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px; }
+        .settings-panel .close-btn { align-self:flex-end; background:none; border:none; color:rgba(255,255,255,0.4); font-size:1.2rem; cursor:pointer; margin-top:-8px; margin-right:-4px; }
+        .settings-panel .close-btn:hover { color:#fff; }
+        .settings-tabs {
+            display: flex;
+            gap: 8px;
+            margin: 6px 0 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 6px;
+        }
+        .settings-tabs .tab-btn {
+            padding: 4px 14px;
+            font-size: 0.7rem;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            border-radius: 20px;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .settings-tabs .tab-btn.active { background:rgba(255,255,255,0.15); color:#fff; }
+        .settings-tabs .tab-btn:hover { background:rgba(255,255,255,0.1); }
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+        .tab-content.active { display: flex; }
+        .tab-content::-webkit-scrollbar { width:3px; }
+        .tab-content::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.2); border-radius:4px; }
+
+        .history-item, .bookmark-manage-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            font-size: 0.6rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .history-item .info { flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; margin-right:6px; }
+        .history-item .info .url { color:rgba(255,255,255,0.4); font-size:0.5rem; }
+        .history-item .time { color:rgba(255,255,255,0.3); font-size:0.45rem; margin-right:6px; }
+        .btn-sm {
+            padding: 2px 10px;
+            font-size: 0.5rem;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .btn-sm:hover { background:rgba(255,255,255,0.25); }
+        .btn-sm.added { background: rgba(100,200,100,0.2); color: #8f8; }
+        .btn-sm.danger { background: rgba(255,70,70,0.2); color: #f77; }
+        .btn-sm.danger:hover { background: rgba(255,70,70,0.4); }
+
+        .bookmark-manage-item .move-btns { display:flex; gap:2px; }
+        .bookmark-manage-item .move-btns button { background:none; border:none; color:rgba(255,255,255,0.3); cursor:pointer; font-size:0.7rem; padding:0 2px; }
+        .bookmark-manage-item .move-btns button:hover { color:#fff; }
+
+        .add-bookmark-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin: 8px 0 4px;
+        }
+        .add-bookmark-form input {
+            flex: 1;
+            min-width: 80px;
+            padding: 4px 8px;
+            font-size: 0.55rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #fff;
+            outline: none;
+        }
+        .add-bookmark-form input::placeholder { color:rgba(255,255,255,0.3); }
+        .add-bookmark-form button {
+            padding: 4px 12px;
+            background: rgba(74,158,255,0.2);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.55rem;
+            cursor: pointer;
+        }
+        .add-bookmark-form button:hover { background:rgba(74,158,255,0.4); }
+
+        .history-filter {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+        .history-filter button {
+            padding: 2px 12px;
+            font-size: 0.5rem;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            border-radius: 12px;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+        }
+        .history-filter button.active { background:rgba(255,255,255,0.15); color:#fff; }
+        .history-actions {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .history-actions .btn-sm { font-size:0.5rem; padding:2px 14px; }
+
+        @media (max-width:400px) {
+            .main-content { max-width:240px; }
+            .bookmark-card { min-width:34px; padding:5px 6px 4px; }
+            .bookmark-card .icon { font-size:1.0rem; }
+            .bookmark-card .title { font-size:0.35rem; }
+            .right-bottom-area { bottom:6px; right:6px; }
+            #amiyaBox .amiya-wrap img { width:44px; height:44px; }
+            #amiyaBox { padding:5px 6px; }
+            #amiyaBox .amiya-wrap .arrow { font-size:0.9rem; }
+            #top-left { padding:6px 8px 4px 6px; }
+            .top-row .logo { width:32px; height:32px; }
+            .top-row .time { font-size:0.75rem; }
+            .bottom-row { font-size:0.4rem; }
+            #musicPanel { width:200px; right:6px; top:46px; padding:8px 10px; }
+            #musicToggle { width:28px; height:28px; font-size:0.9rem; }
+            .settings-panel { padding:16px 12px; }
+            #cmdBox { width:150px; max-height:100px; font-size:0.4rem; padding:4px 6px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左上角：刀客塔的仪表盘 + 天气 -->
+    <div id="top-left">
+        <div class="top-row">
+            <img class="logo" src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEY40BqeVknb9Hm0-P2TURMYo6N6IBYFwACWiQAAhVd0Vdi5_XRDayF9D0E.png" alt="logo" loading="lazy">
+            <span class="time" id="clock">--:--:--</span>
+        </div>
+        <div class="bottom-row" id="bottomInfo">
+            <span id="date">----年--月--日</span>
+            <span id="weekday">星期-</span>
+            <span class="period" id="period">--</span>
+            <span class="weather" id="weatherDisplay">
+                <span class="wicon" id="weatherIcon">🌤</span>
+                <span id="weatherText">--°C</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- 音乐 -->
+    <div id="musicToggle">♪</div>
+    <div id="musicPanel">
+        <div class="player">
+            <div class="song-title" id="currentSong">未选择歌曲</div>
+            <div class="controls">
+                <button id="prevBtn">⏮</button>
+                <button id="playBtn">▶</button>
+                <button id="nextBtn">⏭</button>
+            </div>
+            <div class="progress">
+                <span id="currentTime">0:00</span>
+                <input type="range" id="progressBar" value="0" step="0.01">
+                <span id="totalTime">0:00</span>
+            </div>
+        </div>
+        <div class="group-tabs" id="groupTabs">
+            <span class="tab active" data-group="游戏原声">[游戏]</span>
+            <span class="tab" data-group="其他">[其他]</span>
+        </div>
+        <div class="playlist" id="playlistContainer"></div>
+        <div class="add-song">
+            <input type="text" id="newSongName" placeholder="歌名">
+            <input type="text" id="newSongFile" placeholder="路径 (music1/xxx.mp3)">
+            <select id="newSongGroup"><option value="游戏原声">[游戏]</option><option value="其他">[其他]</option></select>
+            <button id="addSongBtn">添加</button>
+        </div>
+    </div>
+
+    <!-- 主战场 -->
+    <div class="main-content">
+        <form class="search-box" action="https://cn.bing.com/search" method="get" target="_self" id="searchForm">
+            <input type="text" name="q" placeholder="输入关键词…" autofocus required>
+            <button type="submit">→</button>
+        </form>
+        <div class="bookmark-grid" id="bookmarkGrid"></div>
+    </div>
+
+    <!-- 右下角 -->
+    <div class="right-bottom-area">
+        <div id="amiyaBox">
+            <div class="amiya-wrap">
+                <span class="arrow">→</span>
+                <img id="amiyaGif" src="./gif/1.gif" alt="阿米娅" loading="lazy">
+            </div>
+            <div class="click-hint">点这里</div>
+        </div>
+        <div class="footer-credit">
+            <a href="manage.html" target="_self">管理歌曲</a>
+            <a href="https://qm.qq.com/q/tpGllfZTXO" target="_blank">关于 HyP0x1a</a>
+        </div>
+    </div>
+
+    <!-- 左下角情报终端 -->
+    <div id="cmdBox"></div>
+
+    <!-- 设置面板 -->
+    <div id="settingsModal">
+        <div class="settings-panel">
+            <button class="close-btn" id="closeSettings">✕</button>
+            <h2>⚙ 书签管理</h2>
+            <div class="settings-tabs">
+                <button class="tab-btn active" data-tab="history">历史记录</button>
+                <button class="tab-btn" data-tab="manage">管理书签</button>
+            </div>
+            <div class="tab-content active" id="tabHistory">
+                <div class="history-filter">
+                    <button class="active" data-sort="recent">最近</button>
+                    <button data-sort="frequent">最常访问</button>
+                </div>
+                <div class="history-actions">
+                    <button class="btn-sm danger" id="clearHistoryBtn">清空全部</button>
+                </div>
+                <div id="historyList"></div>
+            </div>
+            <div class="tab-content" id="tabManage">
+                <div id="bookmarkManageList"></div>
+                <div class="add-bookmark-form">
+                    <input type="text" id="newBookmarkTitle" placeholder="标题">
+                    <input type="text" id="newBookmarkUrl" placeholder="URL (https://...)">
+                    <button id="addBookmarkBtn">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 书签 ==========
+        // 彩蛋：如果你看到这行，说明你已经发现了隐藏的刀客塔通道
+        
+        var DEFAULT_BOOKMARKS = [
+            { id: 'settings', title: '设置', url: '#', icon: '⚙', fixed: true },
+            { id: 'bilibili', title: 'B站', url: 'https://bilibili.com', icon: 'B' },
+            { id: 'douyin', title: '抖音', url: 'https://www.douyin.com', icon: 'D' },
+            { id: 'github', title: 'GitHub', url: 'https://github.com', icon: 'G' }
+        ];
+
+        function initBookmarks() {
+            var stored = localStorage.getItem('bookmarks');
+            if (!stored) {
+                localStorage.setItem('bookmarks', JSON.stringify(DEFAULT_BOOKMARKS));
+                return;
+            }
+            try {
+                var parsed = JSON.parse(stored);
+                var hasSettings = parsed.some(function(b) { return b.id === 'settings'; });
+                if (!hasSettings) parsed.unshift(DEFAULT_BOOKMARKS[0]);
+                ['bilibili', 'douyin', 'github'].forEach(function(id) {
+                    if (!parsed.some(function(b) { return b.id === id; })) {
+                        var def = DEFAULT_BOOKMARKS.find(function(d) { return d.id === id; });
+                        if (def) parsed.push(def);
+                    }
+                });
+                localStorage.setItem('bookmarks', JSON.stringify(parsed));
+            } catch(e) {
+                localStorage.setItem('bookmarks', JSON.stringify(DEFAULT_BOOKMARKS));
+            }
+        }
+        initBookmarks();
+
+        function getBookmarks() {
+            var stored = localStorage.getItem('bookmarks');
+            if (stored) {
+                try {
+                    var parsed = JSON.parse(stored);
+                    var hasSettings = parsed.some(function(b) { return b.id === 'settings'; });
+                    if (!hasSettings) parsed.unshift(DEFAULT_BOOKMARKS[0]);
+                    DEFAULT_BOOKMARKS.forEach(function(def) {
+                        if (def.id === 'settings') return;
+                        if (!parsed.some(function(b) { return b.id === def.id; })) parsed.push(def);
+                    });
+                    return parsed;
+                } catch(e) { /* fall through */ }
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_BOOKMARKS));
+        }
+
+        function saveBookmarks(bookmarks) {
+            localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+        }
+
+        // ========== 历史记录 ==========
+        // 彩蛋：据说凯尔希也会看这里
+        
+        function getHistory() {
+            var stored = localStorage.getItem('history');
+            if (stored) {
+                try { return JSON.parse(stored); } catch(e) { /* ignore */ }
+            }
+            return [];
+        }
+
+        function saveHistory(history) {
+            var now = Date.now();
+            var sevenDays = 7 * 24 * 3600 * 1000;
+            var filtered = history.filter(function(item) {
+                return (now - item.timestamp) < sevenDays;
+            });
+            localStorage.setItem('history', JSON.stringify(filtered));
+        }
+
+        function recordVisit(url, title) {
+            if (!url || url === '#' || url === '') return;
+            var history = getHistory();
+            var now = Date.now();
+            var existing = history.find(function(item) { return item.url === url; });
+            if (existing) {
+                existing.timestamp = now;
+                existing.count = (existing.count || 1) + 1;
+                existing.title = title || existing.title;
+            } else {
+                history.push({ url: url, title: title || url, timestamp: now, count: 1 });
+            }
+            saveHistory(history);
+        }
+
+        function deleteHistoryItem(url) {
+            var history = getHistory();
+            var newHistory = history.filter(function(item) { return item.url !== url; });
+            saveHistory(newHistory);
+        }
+
+        function clearAllHistory() {
+            localStorage.removeItem('history');
+        }
+
+        // ========== 渲染书签 ==========
+        // 彩蛋：阿米娅说这些书签都很重要
+        
+        function renderBookmarks() {
+            var grid = document.getElementById('bookmarkGrid');
+            var bookmarks = getBookmarks();
+            grid.innerHTML = '';
+            bookmarks.forEach(function(bm) {
+                var card = document.createElement('a');
+                card.className = 'bookmark-card' + (bm.fixed ? ' fixed' : '');
+                card.href = bm.url;
+                card.setAttribute('data-id', bm.id);
+                if (bm.id === 'settings') {
+                    card.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        openSettings();
+                    });
+                } else {
+                    card.addEventListener('click', function(e) {
+                        recordVisit(bm.url, bm.title);
+                    });
+                }
+                var iconSpan = document.createElement('span');
+                iconSpan.className = 'icon';
+                iconSpan.textContent = bm.icon || '•';
+                card.appendChild(iconSpan);
+                var titleSpan = document.createElement('span');
+                titleSpan.className = 'title';
+                titleSpan.textContent = bm.title;
+                card.appendChild(titleSpan);
+                grid.appendChild(card);
+            });
+        }
+
+        // ========== 设置面板 ==========
+        // 彩蛋：霜星说这里很安全
+        
+        var modal = document.getElementById('settingsModal');
+        var closeBtn = document.getElementById('closeSettings');
+
+        function openSettings() {
+            modal.classList.add('show');
+            renderHistory(getCurrentSort());
+            renderBookmarkManage();
+            document.querySelectorAll('.settings-tabs .tab-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.settings-tabs .tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    var tab = btn.dataset.tab;
+                    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+                    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+                    if (tab === 'history') renderHistory(getCurrentSort());
+                    if (tab === 'manage') renderBookmarkManage();
+                });
+            });
+            document.querySelectorAll('.history-filter button').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.history-filter button').forEach(function(b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    renderHistory(btn.dataset.sort);
+                });
+            });
+            document.getElementById('clearHistoryBtn').addEventListener('click', function() {
+                if (confirm('确定清空所有历史记录吗？')) {
+                    clearAllHistory();
+                    renderHistory(getCurrentSort());
+                }
+            });
+        }
+
+        function closeSettings() {
+            modal.classList.remove('show');
+        }
+        closeBtn.addEventListener('click', closeSettings);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeSettings();
+        });
+
+        function getCurrentSort() {
+            var active = document.querySelector('.history-filter button.active');
+            return active ? active.dataset.sort : 'recent';
+        }
+
+        function renderHistory(sort) {
+            var list = document.getElementById('historyList');
+            var history = getHistory();
+            if (sort === 'frequent') {
+                history.sort(function(a, b) { return (b.count || 0) - (a.count || 0); });
+            } else {
+                history.sort(function(a, b) { return b.timestamp - a.timestamp; });
+            }
+            list.innerHTML = '';
+            if (history.length === 0) {
+                list.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.6rem;text-align:center;padding:12px;">暂无历史记录</div>';
+                return;
+            }
+            var bookmarks = getBookmarks();
+            var bookmarkUrls = bookmarks.map(function(b) { return b.url; });
+            history.forEach(function(item) {
+                var div = document.createElement('div');
+                div.className = 'history-item';
+                var info = document.createElement('div');
+                info.className = 'info';
+                var titleSpan = document.createElement('div');
+                titleSpan.textContent = item.title || item.url;
+                var urlSpan = document.createElement('div');
+                urlSpan.className = 'url';
+                urlSpan.textContent = item.url;
+                info.appendChild(titleSpan);
+                info.appendChild(urlSpan);
+                div.appendChild(info);
+                var timeSpan = document.createElement('span');
+                timeSpan.className = 'time';
+                var d = new Date(item.timestamp);
+                timeSpan.textContent = (d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+                div.appendChild(timeSpan);
+                var isBookmarked = bookmarkUrls.indexOf(item.url) !== -1;
+                var addBtn = document.createElement('button');
+                addBtn.className = 'btn-sm' + (isBookmarked ? ' added' : '');
+                addBtn.textContent = isBookmarked ? '已添加' : '添加书签';
+                addBtn.disabled = isBookmarked;
+                addBtn.addEventListener('click', function() {
+                    if (isBookmarked) return;
+                    var bookmarksNow = getBookmarks();
+                    if (bookmarksNow.some(function(b) { return b.url === item.url; })) {
+                        alert('书签已存在');
+                        return;
+                    }
+                    bookmarksNow.push({
+                        id: 'bm_' + Date.now(),
+                        title: item.title || item.url,
+                        url: item.url,
+                        icon: '🔖'
+                    });
+                    saveBookmarks(bookmarksNow);
+                    renderBookmarks();
+                    renderHistory(getCurrentSort());
+                    renderBookmarkManage();
+                });
+                div.appendChild(addBtn);
+                var delBtn = document.createElement('button');
+                delBtn.className = 'btn-sm danger';
+                delBtn.textContent = '删除';
+                delBtn.addEventListener('click', function() {
+                    if (confirm('删除此条历史记录？')) {
+                        deleteHistoryItem(item.url);
+                        renderHistory(getCurrentSort());
+                    }
+                });
+                div.appendChild(delBtn);
+                list.appendChild(div);
+            });
+        }
+
+        function renderBookmarkManage() {
+            var list = document.getElementById('bookmarkManageList');
+            var bookmarks = getBookmarks();
+            var manageable = bookmarks.filter(function(b) { return !b.fixed; });
+            list.innerHTML = '';
+            if (manageable.length === 0) {
+                list.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.6rem;text-align:center;padding:12px;">暂无书签，请从历史记录添加或手动添加</div>';
+                return;
+            }
+            manageable.forEach(function(bm, idx) {
+                var div = document.createElement('div');
+                div.className = 'bookmark-manage-item';
+                var info = document.createElement('span');
+                info.textContent = (bm.icon || '•') + ' ' + bm.title;
+                div.appendChild(info);
+                var controls = document.createElement('div');
+                controls.style.display = 'flex';
+                controls.style.gap = '4px';
+                var moveBtns = document.createElement('span');
+                moveBtns.className = 'move-btns';
+                var upBtn = document.createElement('button');
+                upBtn.textContent = '↑';
+                upBtn.disabled = (idx === 0);
+                upBtn.addEventListener('click', function() {
+                    if (idx > 0) {
+                        var bmList = getBookmarks();
+                        var filtered = bmList.filter(function(b) { return !b.fixed; });
+                        var realIdx = bmList.indexOf(filtered[idx]);
+                        var prevRealIdx = bmList.indexOf(filtered[idx-1]);
+                        [bmList[realIdx], bmList[prevRealIdx]] = [bmList[prevRealIdx], bmList[realIdx]];
+                        saveBookmarks(bmList);
+                        renderBookmarks();
+                        renderBookmarkManage();
+                    }
+                });
+                moveBtns.appendChild(upBtn);
+                var downBtn = document.createElement('button');
+                downBtn.textContent = '↓';
+                downBtn.disabled = (idx === manageable.length - 1);
+                downBtn.addEventListener('click', function() {
+                    if (idx < manageable.length - 1) {
+                        var bmList = getBookmarks();
+                        var filtered = bmList.filter(function(b) { return !b.fixed; });
+                        var realIdx = bmList.indexOf(filtered[idx]);
+                        var nextRealIdx = bmList.indexOf(filtered[idx+1]);
+                        [bmList[realIdx], bmList[nextRealIdx]] = [bmList[nextRealIdx], bmList[realIdx]];
+                        saveBookmarks(bmList);
+                        renderBookmarks();
+                        renderBookmarkManage();
+                    }
+                });
+                moveBtns.appendChild(downBtn);
+                controls.appendChild(moveBtns);
+                var delBtn = document.createElement('button');
+                delBtn.className = 'btn-sm danger';
+                delBtn.textContent = '删除';
+                delBtn.addEventListener('click', function() {
+                    if (confirm('删除书签 "' + bm.title + '" ？')) {
+                        var bmList = getBookmarks();
+                        var idxToRemove = bmList.indexOf(bm);
+                        if (idxToRemove !== -1) {
+                            bmList.splice(idxToRemove, 1);
+                            saveBookmarks(bmList);
+                            renderBookmarks();
+                            renderBookmarkManage();
+                            renderHistory(getCurrentSort());
+                        }
+                    }
+                });
+                controls.appendChild(delBtn);
+                div.appendChild(controls);
+                list.appendChild(div);
+            });
+        }
+
+        document.getElementById('addBookmarkBtn').addEventListener('click', function() {
+            var titleInput = document.getElementById('newBookmarkTitle');
+            var urlInput = document.getElementById('newBookmarkUrl');
+            var title = titleInput.value.trim();
+            var url = urlInput.value.trim();
+            if (!title || !url) { alert('请填写标题和URL'); return; }
+            if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+            var bookmarks = getBookmarks();
+            if (bookmarks.some(function(b) { return b.url === url; })) { alert('该URL已存在'); return; }
+            bookmarks.push({ id: 'bm_' + Date.now(), title: title, url: url, icon: '🔖' });
+            saveBookmarks(bookmarks);
+            renderBookmarks();
+            renderBookmarkManage();
+            titleInput.value = '';
+            urlInput.value = '';
+            var activeTab = document.querySelector('.settings-tabs .tab-btn.active');
+            if (activeTab && activeTab.dataset.tab === 'history') renderHistory(getCurrentSort());
+        });
+
+        // ========== 搜索 ==========
+        // 彩蛋：刀客塔在寻找什么？
+        
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            var input = this.querySelector('input[name="q"]');
+            var q = input.value.trim();
+            if (q) {
+                var url = 'https://cn.bing.com/search?q=' + encodeURIComponent(q);
+                recordVisit(url, '搜索: ' + q);
+            }
+        });
+
+        // ========== 音乐盒 ==========
+        // 彩蛋：能天使说她最喜欢这首
+        
+        var builtInSongs = [
+            { name: '生命流', file: 'music1/生命流.mp3', group: '游戏原声' },
+            { name: 'Misty Memory', file: 'music1/Misty Memory.mp3', group: '游戏原声' },
+            { name: 'Tno道阻且长Fiction Blue', file: 'music2/Tno道阻且长Fiction Blue.mp3', group: '其他' },
+            { name: '怪物之歌', file: 'music2/怪物之歌.mp3', group: '其他' },
+            { name: '迷途航线', file: 'music2/迷途航线.mp3', group: '其他' },
+            { name: '我的悲伤是水做的', file: 'music2/我的悲伤是水做的.mp3', group: '其他' },
+            { name: '消失在人潮涌动的那天', file: 'music2/消失在人潮涌动的那天.mp3', group: '其他' }
+        ];
+        var customSongs = [];
+        try { var stored = localStorage.getItem('ark_songs'); if (stored) { customSongs = JSON.parse(stored); customSongs = customSongs.filter(function(s) { return s.name && s.file && s.group; }); } } catch(e) { }
+        var songMap = {};
+        builtInSongs.forEach(function(s) { songMap[s.file] = s; });
+        customSongs.forEach(function(s) { songMap[s.file] = s; });
+        var songs = Object.values(songMap);
+
+        var audio = new Audio();
+        var currentGroup = '游戏原声';
+        var curGroupIndex = 0;
+        var isPlaying = false;
+        var playBtn = document.getElementById('playBtn');
+        var prevBtn = document.getElementById('prevBtn');
+        var nextBtn = document.getElementById('nextBtn');
+        var progressBar = document.getElementById('progressBar');
+        var currentTimeLabel = document.getElementById('currentTime');
+        var totalTimeLabel = document.getElementById('totalTime');
+        var currentSongTitle = document.getElementById('currentSong');
+        var playlistContainer = document.getElementById('playlistContainer');
+        var groupTabs = document.getElementById('groupTabs');
+        var newSongName = document.getElementById('newSongName');
+        var newSongFile = document.getElementById('newSongFile');
+        var newSongGroup = document.getElementById('newSongGroup');
+        var addSongBtn = document.getElementById('addSongBtn');
+
+        function formatTime(seconds) { if (isNaN(seconds)) return '0:00'; var mins=Math.floor(seconds/60); var secs=Math.floor(seconds%60); return mins+':'+(secs<10?'0':'')+secs; }
+        function getGroupSongs() { return songs.filter(function(s) { return s.group === currentGroup; }); }
+        function loadGroupSong(index) {
+            var groupSongs = getGroupSongs();
+            if (groupSongs.length === 0) { audio.src=''; currentSongTitle.textContent='无歌曲'; playBtn.textContent='▶'; isPlaying=false; return; }
+            if (index < 0) index = 0; if (index >= groupSongs.length) index = groupSongs.length - 1;
+            curGroupIndex = index;
+            var song = groupSongs[curGroupIndex];
+            audio.src = song.file;
+            audio.load();
+            currentSongTitle.textContent = song.name;
+            renderPlaylist();
+            progressBar.value = 0; currentTimeLabel.textContent='0:00'; totalTimeLabel.textContent='0:00';
+            if (isPlaying) { audio.play().catch(function(e){}); }
+        }
+        function playPause() { var groupSongs = getGroupSongs(); if (groupSongs.length===0) return; if (audio.paused) { audio.play().catch(function(e){}); playBtn.textContent='⏸'; isPlaying=true; } else { audio.pause(); playBtn.textContent='▶'; isPlaying=false; } }
+        function prevSong() { var groupSongs = getGroupSongs(); if (groupSongs.length===0) return; var idx = curGroupIndex - 1; if (idx < 0) idx = groupSongs.length - 1; loadGroupSong(idx); if (isPlaying) audio.play().catch(function(e){}); }
+        function nextSong() { var groupSongs = getGroupSongs(); if (groupSongs.length===0) return; var idx = curGroupIndex + 1; if (idx >= groupSongs.length) idx = 0; loadGroupSong(idx); if (isPlaying) audio.play().catch(function(e){}); }
+        function renderPlaylist() {
+            var groupSongs = getGroupSongs();
+            playlistContainer.innerHTML = '';
+            groupSongs.forEach(function(song, idx) {
+                var div = document.createElement('div');
+                div.className = 'song-item' + (idx === curGroupIndex ? ' active' : '');
+                var nameSpan = document.createElement('span');
+                nameSpan.textContent = song.name;
+                div.appendChild(nameSpan);
+                var delBtn = document.createElement('button');
+                delBtn.className = 'del-btn';
+                delBtn.textContent = 'x';
+                delBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (confirm('删除歌曲 "' + song.name + '" ？')) {
+                        var globalIdx = songs.indexOf(song);
+                        if (globalIdx !== -1) songs.splice(globalIdx, 1);
+                        updateLocalStorage();
+                        var newGroupSongs = getGroupSongs();
+                        if (newGroupSongs.length === 0) {
+                            var otherGroup = currentGroup === '游戏原声' ? '其他' : '游戏原声';
+                            if (songs.some(function(s) { return s.group === otherGroup; })) {
+                                switchGroup(otherGroup);
+                            } else {
+                                audio.src = '';
+                                currentSongTitle.textContent = '无歌曲';
+                                playBtn.textContent = '▶';
+                                isPlaying = false;
+                                renderPlaylist();
+                            }
+                        } else {
+                            if (curGroupIndex >= newGroupSongs.length) curGroupIndex = newGroupSongs.length - 1;
+                            loadGroupSong(curGroupIndex);
+                        }
+                    }
+                });
+                div.appendChild(delBtn);
+                div.addEventListener('click', function() {
+                    if (getGroupSongs().length > 0 && idx !== curGroupIndex) {
+                        loadGroupSong(idx);
+                        if (audio.paused) { audio.play().catch(function(e){}); playBtn.textContent='⏸'; isPlaying=true; }
+                    }
+                });
+                playlistContainer.appendChild(div);
+            });
+        }
+        function switchGroup(group) {
+            if (group === currentGroup) return;
+            currentGroup = group;
+            var tabs = groupTabs.querySelectorAll('.tab');
+            tabs.forEach(function(tab) { tab.classList.toggle('active', tab.dataset.group === group); });
+            var groupSongs = getGroupSongs();
+            if (groupSongs.length > 0) { curGroupIndex = 0; loadGroupSong(0); if (document.getElementById('musicPanel').classList.contains('show') && audio.paused) { audio.play().catch(function(e){}); playBtn.textContent='⏸'; isPlaying=true; } }
+            else { audio.src=''; currentSongTitle.textContent='无歌曲'; playBtn.textContent='▶'; isPlaying=false; renderPlaylist(); }
+        }
+        function updateLocalStorage() {
+            var builtInFiles = builtInSongs.map(function(s) { return s.file; });
+            var custom = songs.filter(function(s) { return builtInFiles.indexOf(s.file) === -1; });
+            localStorage.setItem('ark_songs', JSON.stringify(custom));
+        }
+        addSongBtn.addEventListener('click', function() {
+            var name = newSongName.value.trim();
+            var file = newSongFile.value.trim();
+            var group = newSongGroup.value;
+            if (!name || !file) { alert('请填写歌名和文件路径'); return; }
+            var exists = songs.some(function(s) { return s.file === file; });
+            if (exists) { alert('该文件已存在'); return; }
+            songs.push({ name: name, file: file, group: group });
+            newSongName.value = ''; newSongFile.value = '';
+            updateLocalStorage();
+            if (group === currentGroup) {
+                renderPlaylist();
+                var groupSongs = getGroupSongs();
+                if (groupSongs.length === 1) { curGroupIndex = 0; loadGroupSong(0); if (document.getElementById('musicPanel').classList.contains('show') && audio.paused) { audio.play().catch(function(e){}); playBtn.textContent='⏸'; isPlaying=true; } }
+            } else { switchGroup(group); }
+        });
+        playBtn.addEventListener('click', playPause);
+        prevBtn.addEventListener('click', prevSong);
+        nextBtn.addEventListener('click', nextSong);
+        audio.addEventListener('timeupdate', function() {
+            if (audio.duration) { progressBar.value = (audio.currentTime / audio.duration) * 100; currentTimeLabel.textContent = formatTime(audio.currentTime); totalTimeLabel.textContent = formatTime(audio.duration); }
+        });
+        audio.addEventListener('ended', function() { nextSong(); });
+        progressBar.addEventListener('input', function() {
+            if (audio.duration) { audio.currentTime = (progressBar.value / 100) * audio.duration; }
+        });
+        groupTabs.addEventListener('click', function(e) { var tab = e.target.closest('.tab'); if (!tab) return; var group = tab.dataset.group; if (group !== currentGroup) switchGroup(group); });
+        document.getElementById('musicToggle').addEventListener('click', function() {
+            var panel = document.getElementById('musicPanel');
+            var isShow = panel.classList.toggle('show');
+            if (isShow) {
+                var groupSongs = getGroupSongs();
+                if (groupSongs.length > 0 && (!audio.src || audio.src === '')) { curGroupIndex = 0; loadGroupSong(0); }
+                if (audio.paused) { audio.play().catch(function(e){}); playBtn.textContent='⏸'; isPlaying=true; }
+            }
+        });
+        if (songs.length === 0) { songs.push({ name: '示例歌曲', file: 'music1/example.mp3', group: '游戏原声' }); }
+        var initialGroup = '游戏原声';
+        var groupSongs = songs.filter(function(s) { return s.group === initialGroup; });
+        if (groupSongs.length > 0) { currentGroup = initialGroup; curGroupIndex = 0; loadGroupSong(0); }
+        else { var otherGroup = '其他'; var otherSongs = songs.filter(function(s) { return s.group === otherGroup; }); if (otherSongs.length > 0) { currentGroup = otherGroup; curGroupIndex = 0; loadGroupSong(0); } }
+        var tabs = groupTabs.querySelectorAll('.tab');
+        tabs.forEach(function(tab) { tab.classList.toggle('active', tab.dataset.group === currentGroup); });
+        renderPlaylist();
+        document.getElementById('musicPanel').classList.remove('show');
+
+        // ========== 时钟 + 时段 ==========
+        // 彩蛋：时间在罗德岛上流动得很慢
+        
+        function updateClock() {
+            var now = new Date();
+            var h = String(now.getHours()).padStart(2,'0');
+            var m = String(now.getMinutes()).padStart(2,'0');
+            var s = String(now.getSeconds()).padStart(2,'0');
+            document.getElementById('clock').textContent = h+':'+m+':'+s;
+            var year = now.getFullYear();
+            var month = String(now.getMonth()+1).padStart(2,'0');
+            var day = String(now.getDate()).padStart(2,'0');
+            var weekdays = ['日','一','二','三','四','五','六'];
+            var wd = weekdays[now.getDay()];
+            document.getElementById('date').textContent = year+'年'+month+'月'+day+'日';
+            document.getElementById('weekday').textContent = '星期'+wd;
+            var hour = now.getHours();
+            var period = '';
+            if (hour >= 5 && hour < 7) period = '晓';
+            else if (hour >= 7 && hour < 9) period = '晨';
+            else if (hour >= 9 && hour < 13) period = '午';
+            else if (hour >= 13 && hour < 15) period = '昼';
+            else if (hour >= 15 && hour < 17) period = '晡';
+            else if (hour >= 17 && hour < 19) period = '昏';
+            else period = '夜';
+            document.getElementById('period').textContent = period;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // ========== 天气系统（使用 JSON API，精确解析） ==========
+        // 彩蛋：天气预报是凯尔希每天必看的内容
+        
+        function fetchWeather() {
+            var weatherIcon = document.getElementById('weatherIcon');
+            var weatherText = document.getElementById('weatherText');
+            
+            // 使用 wttr.in 的 JSON API，更稳定
+            fetch('https://wttr.in?format=j1&lang=zh')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    try {
+                        var current = data.current_condition[0];
+                        var temp = current.temp_C || '--';
+                        var desc = current.weatherDesc[0].value || '';
+                        // 提取天气图标（wttr.in 的 icon 字段返回代码，我们映射为 emoji）
+                        var iconCode = current.weatherCode || '';
+                        var iconMap = {
+                            '113': '☀️', '116': '🌤', '119': '☁️', '122': '☁️',
+                            '143': '🌫', '176': '🌦', '179': '🌨', '182': '🌧',
+                            '185': '🌧', '200': '⛈', '227': '❄️', '230': '❄️',
+                            '248': '🌫', '260': '🌫', '263': '🌦', '266': '🌧',
+                            '281': '🌧', '284': '🌧', '293': '🌦', '296': '🌧',
+                            '299': '🌧', '302': '🌧', '305': '🌧', '308': '🌧',
+                            '311': '🌧', '314': '🌧', '317': '🌧', '320': '🌨',
+                            '323': '❄️', '326': '❄️', '329': '❄️', '332': '❄️',
+                            '335': '❄️', '338': '❄️', '350': '🌧', '353': '🌦',
+                            '356': '🌧', '359': '🌧', '362': '🌧', '365': '🌧',
+                            '368': '🌨', '371': '❄️', '374': '🌧', '377': '🌧',
+                            '386': '⛈', '389': '⛈', '392': '⛈', '395': '❄️'
+                        };
+                        var icon = iconMap[iconCode] || '🌤';
+                        weatherIcon.textContent = icon;
+                        // 显示温度和天气描述
+                        weatherText.textContent = temp + '°C ' + desc;
+                        // 如果描述为空，只显示温度
+                        if (!desc || desc.length === 0) {
+                            weatherText.textContent = temp + '°C';
+                        }
+                    } catch (e) {
+                        weatherText.textContent = '--°C';
+                    }
+                })
+                .catch(function() {
+                    weatherText.textContent = '--°C';
+                });
+        }
+
+        // 首次立即获取
+        fetchWeather();
+        // 每 30 分钟更新一次天气
+        setInterval(fetchWeather, 30 * 60 * 1000);
+
+        // ========== 左下角情报终端 ==========
+        // 彩蛋：这里面的每一句话都是真的，除了那些假的
+        
+        var cmdBox = document.getElementById('cmdBox');
+
+        var operators = [
+            '能天使', '银灰', '艾雅法拉', '伊芙利特', '塞雷娅',
+            '星熊', '拉普兰德', '德克萨斯', '陈', '煌',
+            '棘刺', '史尔特尔', '山', '泥岩', '凯尔希',
+            '阿米娅', '霜星', 'W', '塔露拉', '闪灵',
+            '夜莺', '白面鸮', '华法琳', '赫默', '临光',
+            '雷蛇', '芙兰卡', '因陀罗', '推进之王', '风笛'
+        ];
+
+        var messages = [
+            '> 系统初始化完成，刀客塔。',
+            '> 罗德岛后勤系统在线。',
+            '> 源石技艺波动平稳。',
+            '> 已记录 42 次作战行动。',
+            '> 推荐干员：{op}',
+            '> 阿米娅在等你，刀客塔。',
+            '> 作战指挥室待命中。',
+            '> 左下方情报终端已开启。',
+            '> 检测到新邮件，来自凯尔希。',
+            '> 执行日常任务：划水。',
+            '> 刀客塔，该休息了。',
+            '> 罗德岛日志：晴。',
+            '> 今天也是充满希望的一天。',
+            '> 刀客塔，午饭吃了吗？',
+            '> 天灾预警系统：正常。',
+            '> 基建资源储备：充足。',
+            '> 正在招募新干员...',
+            '> 技能训练进行中。',
+            '> 无活跃任务。',
+            '> PRTS 连接稳定。',
+            '> 刀客塔，您的咖啡准备好了。',
+            '> 宿舍3：全员入睡。',
+            '> 训练室：斯卡蒂使用中。',
+            '> 加工站：生产源石。',
+            '> 贸易站：5 笔订单待处理。',
+            '> 会客室：检测到访客。',
+            '> 她正在找你，刀客塔。',
+            '> 还记得过去吗？',
+            '> 世界需要一个英雄。',
+            '> 保持警惕，刀客塔。',
+            '> 每一天都是新的战斗。',
+            '> 需要你的战术指挥。',
+            '> 别忘了放松一下。',
+            '> 罗德岛正在移动。',
+            '> 天气预报：多云，有雨。',
+            '> 电力供应：98%。',
+            '> 当前无警报。',
+            '> 祝你好运，刀客塔。',
+            '> 愿你的决策明智。',
+            '> 记录所有事件...',
+            '> 终端空闲，等待指令。'
+        ];
+
+        function getRandomOp() {
+            return operators[Math.floor(Math.random() * operators.length)];
+        }
+
+        function getLogLine() {
+            var msg = messages[Math.floor(Math.random() * messages.length)];
+            if (msg.indexOf('{op}') !== -1) {
+                msg = msg.replace(/\{op\}/g, getRandomOp());
+            }
+            return msg;
+        }
+
+        for (var i = 0; i < 10; i++) {
+            var line = document.createElement('div');
+            line.className = 'line';
+            line.textContent = getLogLine();
+            cmdBox.appendChild(line);
+        }
+        while (cmdBox.children.length > 8) {
+            cmdBox.removeChild(cmdBox.firstChild);
+        }
+
+        setInterval(function() {
+            var line = document.createElement('div');
+            line.className = 'line';
+            line.textContent = getLogLine();
+            cmdBox.appendChild(line);
+            while (cmdBox.children.length > 8) {
+                cmdBox.removeChild(cmdBox.firstChild);
+            }
+            cmdBox.scrollTop = cmdBox.scrollHeight;
+        }, 3000);
+
+        // ========== 阿米娅动图 ==========
+        // 彩蛋：阿米娅说点一下会更开心
+        
+        var amiyaImg = document.getElementById('amiyaGif');
+        var amiyaBox = document.getElementById('amiyaBox');
+        var currentGif = 1;
+
+        amiyaBox.addEventListener('click', function() {
+            var next = Math.floor(Math.random() * 21) + 1;
+            while (next === currentGif) {
+                next = Math.floor(Math.random() * 21) + 1;
+            }
+            currentGif = next;
+            amiyaImg.src = './gif/' + currentGif + '.gif?t=' + Date.now();
+        });
+
+        // ========== 启动 ==========
+        // 彩蛋：一切就绪，刀客塔。
+        // 如果看到这行，说明你真的很无聊，但没关系，我也很无聊。
+        
+        renderBookmarks();
+    </script>
+</body>
+</html>
